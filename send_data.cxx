@@ -13,6 +13,7 @@ int main(int argv, char* argc[])
 {
    // argc[1] = url of web server e.g. http://localhost/fazialog
    // argc[2] = parameter list file e.g. parlist.txt
+   if(argv<3) return 1;
    
    /* initialise CURL stuff */
    curl_global_init(CURL_GLOBAL_ALL);

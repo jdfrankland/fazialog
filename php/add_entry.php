@@ -1,4 +1,13 @@
 <?php
+   // add_entry.php
+   // expects to receive a HTTP POST containing an array 'par':
+   //     par[0][key1] = value1
+   //     par[0][key2] = value2
+   //       ...
+   //     par[1][key1] = valueN
+   //       ....
+   // will insert all par[n] 'keys' into a row of the table SCdetectors
+
    $par = $_POST['par'];
    //$number_of_posts = count($par);
    //print "PHP: Received $number_of_posts POSTs...\n";
@@ -14,14 +23,17 @@
  
       //$time_start = microtime(true);
       
-      // Create (connect to) SQLite database in file
+      // Create or connect to SQLite database in file
       $file_db = new PDO('sqlite:fazia.db');
       // Set errormode to exceptions
       $file_db->setAttribute(PDO::ATTR_ERRMODE, 
                             PDO::ERRMODE_EXCEPTION);
+      // the following optimisations allow to gain a little more speed
       $file_db->query("PRAGMA synchronous = OFF");
       $file_db->query("PRAGMA journal_mode = MEMORY");
   
+      // The names of the table columns do not have to be known in advance
+      // We extract them from the first parameter in the POSTed list
       $ins1 = "INSERT INTO SCdetectors (";
       $ins2 = "VALUES (";
       foreach($par[0] as $key => $value){
@@ -33,6 +45,7 @@
       $ins2 .= ":time)";
       $insert = $ins1.$ins2;
        
+      // the values for each parameter will be copied into the array $arr_values
       $stmt = $file_db->prepare($insert);
       foreach($par[0] as $key => $value){
          $arr_values[$key]='';
@@ -40,26 +53,28 @@
       }
       unset($key,$value);
  
+      // this is the timestamp to be used for all parameters sent by POST
       $time = date('Y-m-d H:i:s');
       $stmt->bindParam(':time', $time);
   
+      // perform all INSERTs in a single TRANSACTION (=> speed!)
       $file_db->beginTransaction();
       
-      foreach($par as $id => $item){
+      foreach($par as $id => $item){// loop over list of parameters         
          
-         foreach($item as $key => $value){
+         foreach($item as $key => $value){// loop over parameter infos  
        
             $arr_values[$key]=$value;
          
          }
          unset($key,$value);
     
-         $stmt->execute();
+         $stmt->execute();// prepare insertion into database
          
       }
       unset($item,$id);
   
-      $file_db->commit();
+      $file_db->commit();// execute insertion into database
       
       /**************************************
       * Close db connections                *

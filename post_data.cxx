@@ -9,38 +9,6 @@ using namespace std;
 
 CURL *curl = NULL;
 
-void post_data(const multimap<string, string>& data)
-{
-   if (!curl) return;
-
-   CURLcode res;
-
-   struct curl_httppost *formpost = NULL;
-   struct curl_httppost *lastptr = NULL;
-
-   // Build contents of POST message with key=value pairs
-   for (multimap<string, string>::const_iterator it = data.begin(); it != data.end(); ++it) {
-      curl_formadd(&formpost,
-                   &lastptr,
-                   CURLFORM_COPYNAME, (*it).first.c_str(),
-                   CURLFORM_COPYCONTENTS, (*it).second.c_str(),
-                   CURLFORM_END);
-   }
-
-   if (curl) {
-      curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
-      /* Perform the request, res will get the return code */
-      res = curl_easy_perform(curl);
-      /* Check for errors */
-      if (res != CURLE_OK)
-         fprintf(stderr, "curl_easy_perform() failed: %s\n",
-                 curl_easy_strerror(res));
-
-      /* then cleanup the formpost chain */
-      curl_formfree(formpost);
-   }
-}
-
 void read_and_send_parameter_list(const string& filename)
 {
    ifstream fin;
@@ -91,7 +59,7 @@ void read_and_send_parameter_list(const string& filename)
          // default PHP limit for POST: 1000 key-value pairs (difficult to change for apache module)
          // if we get near the limit (i.e. if we cannot send the next full set of key-value pairs
          // without reaching the limit), we send everything we got so far now
-         cout << "Sending " << pairs << " key-value pairs to server..." << endl;
+         //cout << "Sending " << pairs << " key-value pairs to server..." << endl;
          curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
          res = curl_easy_perform(curl);
          if (res != CURLE_OK)
@@ -106,10 +74,10 @@ void read_and_send_parameter_list(const string& filename)
          nlines++;
       }
    }
-   cout << "read " << nlines << " lines" << endl;
+   //cout << "read " << nlines << " lines" << endl;
    // send any remaining data to server
    if(pairs){
-         cout << "END: Sending " << pairs << " key-value pairs to server..." << endl;
+         //cout << "END: Sending " << pairs << " key-value pairs to server..." << endl;
       curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
       res = curl_easy_perform(curl);
       if (res != CURLE_OK)

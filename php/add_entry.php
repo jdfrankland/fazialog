@@ -1,69 +1,80 @@
-
 <?php
- //ini_set('memory_limit', '1024M');
- $par = $_POST['par'];
- $values = count($par);
- print "PHP: Received $values POSTs...\n";
+   $par = $_POST['par'];
+   //$number_of_posts = count($par);
+   //print "PHP: Received $number_of_posts POSTs...\n";
 
    // Set default timezone
-  date_default_timezone_set('UTC');
+   date_default_timezone_set('UTC');
  
-  try {
-    /**************************************
-    * Create databases and                *
-    * open connections                    *
-    **************************************/
+   try {
+      /**************************************
+      * Create databases and                *
+      * open connections                    *
+      **************************************/
  
-    // Create (connect to) SQLite database in file
-    $file_db = new PDO('sqlite:fazia.db');
-    // Set errormode to exceptions
-    $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+      //$time_start = microtime(true);
+      
+      // Create (connect to) SQLite database in file
+      $file_db = new PDO('sqlite:fazia.db');
+      // Set errormode to exceptions
+      $file_db->setAttribute(PDO::ATTR_ERRMODE, 
                             PDO::ERRMODE_EXCEPTION);
+      $file_db->query("PRAGMA synchronous = OFF");
+      $file_db->query("PRAGMA journal_mode = MEMORY");
   
- 
-    /**************************************
-    * Play with databases and tables      *
-    **************************************/
- 
-    // Prepare INSERT statement to SQLite3 file db
-    //$insert = "INSERT INTO SCdetectors (block, quartet, telescope, detector, detector_name, frontEnd, module, module_name, parameter, value, units, time) 
-    //            VALUES (:block, :quartet, :telescope, :detector, :detector_name, :frontEnd, :module, :module_name, :parameter, :value, :units, :time)";
- $ins1 = "INSERT INTO SCdetectors (";
- $ins2 = "VALUES (";
- foreach($par[0] as $key => $value){
-   $ins1 .= "$key, ";
-   $ins2 .= ":$key, ";
- }
- unset($key,$value);
- $ins1 .= "time) ";
- $ins2 .= ":time)";
- $insert = $ins1.$ins2;
+      $ins1 = "INSERT INTO SCdetectors (";
+      $ins2 = "VALUES (";
+      foreach($par[0] as $key => $value){
+         $ins1 .= "$key, ";
+         $ins2 .= ":$key, ";
+      }
+      unset($key,$value);
+      $ins1 .= "time) ";
+      $ins2 .= ":time)";
+      $insert = $ins1.$ins2;
        
+      $stmt = $file_db->prepare($insert);
+      foreach($par[0] as $key => $value){
+         $arr_values[$key]='';
+         $stmt->bindParam(":$key", $arr_values[$key]);
+      }
+      unset($key,$value);
  
-    // Bind parameters to POST variables
-  $time = date('Y-m-d H:i:s');
-  foreach($par as $id => $item){
-    $stmt = $file_db->prepare($insert);
-    foreach($item as $key => $value){
-       $arr_values[$key]=$value;
-       $stmt->bindParam(":$key", $arr_values[$key]);
-    }
-    unset($key,$value);
-    $stmt->bindParam(':time', $time);
-    $stmt->execute();
-    //print "entered $id\n";
-  }
-  unset($item,$id);
+      $time = date('Y-m-d H:i:s');
+      $stmt->bindParam(':time', $time);
   
-    /**************************************
-    * Close db connections                *
-    **************************************/
+      $file_db->beginTransaction();
+      
+      foreach($par as $id => $item){
+         
+         foreach($item as $key => $value){
+       
+            $arr_values[$key]=$value;
+         
+         }
+         unset($key,$value);
+    
+         $stmt->execute();
+         
+      }
+      unset($item,$id);
+  
+      $file_db->commit();
+      
+      /**************************************
+      * Close db connections                *
+      **************************************/
  
-    // Close file db connection
-    $file_db = null;
-  }
-  catch(PDOException $e) {
-    // Print PDOException message
-    echo $e->getMessage();
-  }
+      // Close file db connection
+      $file_db = null;
+      
+      //$time_end = microtime(true);
+      //$execution_time = ($time_end - $time_start);
+      //$posts_per_second = ($number_of_posts/$execution_time);
+      //print "Execution Time: $execution_time seconds ($posts_per_second posts per second)\n";   
+   }
+   catch(PDOException $e) {
+      // Print PDOException message
+      echo $e->getMessage();
+   }
 ?>

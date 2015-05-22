@@ -11,6 +11,12 @@
    $par = $_POST['par'];
    //$number_of_posts = count($par);
    //print "PHP: Received $number_of_posts POSTs...\n";
+  //Get user and category from _GET or _POST arrays
+  ($_REQUEST['user']!=null)?$user_name=$_REQUEST['user']:$user_name="Unknown";
+  ($_REQUEST['category']!=null)?$CATEGORY=$_REQUEST['category']:$CATEGORY="Uncategorized";
+  
+  print "user=$user_name\n";
+  print "category=$CATEGORY\n";
 
    // Set default timezone
    date_default_timezone_set('UTC');
@@ -24,7 +30,7 @@
       //$time_start = microtime(true);
       
       // Create or connect to SQLite database in file
-      $file_db = new PDO('sqlite:fazia.db');
+      $file_db = new PDO('sqlite:/home/john/software/sources/FAZIALOG/wordpress/fazia.db');
       // Set errormode to exceptions
       $file_db->setAttribute(PDO::ATTR_ERRMODE, 
                             PDO::ERRMODE_EXCEPTION);
@@ -34,7 +40,7 @@
   
       // The names of the table columns do not have to be known in advance
       // We extract them from the first parameter in the POSTed list
-      $ins1 = "INSERT INTO SCdetectors (";
+      $ins1 = "INSERT INTO SC$CATEGORY (";
       $ins2 = "VALUES (";
       foreach($par[0] as $key => $value){
          $ins1 .= "$key, ";

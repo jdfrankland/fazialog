@@ -1,7 +1,7 @@
 .main {
     margin-left: auto;
     margin-right: auto;
-    width: 81%;
+    width: 100%;
     white-space: nowrap;
     text-align: center;
 }
@@ -15,13 +15,13 @@ h1 {
 }
 .temperatures {
    float: left;
-    width: 27%;
+    width: 15%;
 }
 .detectors {
    float: left;
-    width: 27%;
+    width: 50%;
 }
 .daq {
    float: left;
-    width: 27%;
+    width: 35%;
 }

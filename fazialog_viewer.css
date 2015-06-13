@@ -15,11 +15,11 @@ h1 {
 }
 .temperatures {
    float: left;
-    width: 15%;
+    width: 20%;
 }
 .detectors {
    float: left;
-    width: 50%;
+    width: 45%;
 }
 .daq {
    float: left;

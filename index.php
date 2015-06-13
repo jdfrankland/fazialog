@@ -16,6 +16,133 @@ include("$path_to_pchart/class/pImage.class.php");
 include("$path_to_pchart/class/pData.class.php");
 include("$path_to_pchart/class/pScatter.class.php");
 
+//____________________________________________________________________________________________________
+function human_byte($data)
+{
+   // fixed conversion to Gigabytes
+ /* $units = array("B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB");
+
+  $i=0;
+  while ($data >= 1024) {
+   $data /= 1024;
+   $i++;
+  }
+
+  $buffer=number_format($data,2)." $units[$i]";*/
+
+   $buffer = $data/1024/1024/1024;
+   return $buffer;
+}
+
+
+
+//____________________________________________________________________________________________________
+function human_bit($data)
+{
+   // fixed conversion to Megabits
+
+  /*$units = array("b", "kb", "Mb", "Gb", "Tb", "Pb", "Eb", "Zb", "Yb");
+
+  $i=0;
+  while ($data >= 1000) {
+   $data /= 1000;
+   $i++;
+  }
+
+  $buffer=number_format($data,2)." $units[$i]";*/
+  
+  $buffer = $data/1024/1024;
+
+   return $buffer;
+}
+
+
+
+//____________________________________________________________________________________________________
+function human_number($data)
+{
+   // fixed conversion to Mega(events)
+
+  /*$units = array("", "k", "M", "G", "T", "P", "E", "Z", "Y");
+
+  $i=0;
+  while ($data >= 1000) {
+   $data /= 1000;
+   $i++;
+  }
+
+  $buffer=number_format($data,2)." $units[$i]";*/
+
+   $buffer=$data/1024/1024;
+   return $buffer;
+}
+
+function convertDAQtoHuman($par, $value)
+{
+   $human=0;
+     switch ($par) {
+
+       case "out_data":      
+       case "in_data":       
+         $human = human_byte($value);
+         break;
+
+       case "out_event":
+       case "in_event":
+       case "state_invalid":
+       case "events_empty":
+       case "events_good":
+       case "events_bad":    
+         $human = human_number($value);
+         break;
+
+       case "out_databw":
+       case "in_databw":     
+         $human = human_bit($value*8);
+         break;
+
+       case "out_eventbw":
+       case "in_eventbw":   
+         $human = human_number($value*1024*1024);
+         break;
+
+     }
+     return $human;
+}
+
+function getDAQunits($par)
+{
+   $units="";
+     switch ($par) {
+
+       case "out_data":      
+       case "in_data":       
+         $units="GB";
+         break;
+
+       case "out_event":
+       case "in_event":
+       case "state_invalid":
+       case "events_empty":
+       case "events_good":
+       case "events_bad":    
+         $units="Mevents";
+         break;
+
+       case "out_databw":
+       case "in_databw":     
+         $units="Mbit/s.";
+         break;
+
+       case "out_eventbw":
+       case "in_eventbw":   
+         $units="events/s.";
+         break;
+
+     }
+     return $units;
+}
+
 function addParameterOption($param,$selected,$preselect)
 {
    print "<option value='$param'";
@@ -28,6 +155,45 @@ function addParameterOptions($parlist,$selected,$preselect)
    foreach($parlist as $param){
       addParameterOption($param,$selected,$preselect);
    }
+}
+
+function buildDAQWriterSelectionForm()
+{
+   $params=array(    
+      "out_data",    
+      "out_event",
+      "out_databw",
+      "out_eventbw",
+      );  
+
+   print "<form action='index.php' method='GET'>\n";
+   print "daq_writer: <select name='parameter'>\n";
+   addParameterOptions($params,"",0);
+   print "</select>\n";
+   print "<input type='hidden' name='daq_writer' value='yes' />\n";
+   print "<input type='submit' value='Display'>\n";
+   print "</form><br>\n";
+}
+
+function buildDAQReaderSelectionForm()
+{
+   $params=array(    
+      "in_data",    
+      "in_event",
+      "in_databw",
+      "in_eventbw",
+      "events_good",
+      "events_bad",
+      "events_empty"
+      );  
+
+   print "<form action='index.php' method='GET'>\n";
+   print "daq_reader: <select name='parameter'>\n";
+   addParameterOptions($params,"",0);
+   print "</select>\n";
+   print "<input type='hidden' name='daq_reader' value='yes' />\n";
+   print "<input type='submit' value='Display'>\n";
+   print "</form><br>\n";
 }
 
 function buildDetectorSelectionForm($detector)
@@ -99,6 +265,22 @@ function getElectronicsValues($db, $parameter, $block, $card, $module)
    return $result;
 }
 
+function getDAQWriterValues($db, $parameter)
+{
+   // return sqlite $db result for $parameter in SCdaq_writer
+   
+   $result = $db->query("SELECT time, $parameter FROM SCdaq_writer");
+   return $result;
+}
+
+function getDAQReaderValues($db, $parameter)
+{
+   // return sqlite $db result for $parameter in SCdaq_writer
+   
+   $result = $db->query("SELECT time, $parameter FROM SCdaq_reader");
+   return $result;
+}
+
 function drawPicture($myData, $width, $par, $title, $file)
 {
    $w=$width; $h=$w*3/4; 
@@ -106,8 +288,11 @@ function drawPicture($myData, $width, $par, $title, $file)
    $wp=0.85; $hp=0.8;
    $offw=(1.05-$wp)*$w/2;
    $offh=(1-$hp)*($h-$tb)/2+$tb;
-   $myPicture = new pImage($w, $h,$myData); // width, height, dataset  
-   $font = "$path_to_pchart/fonts/calibri.ttf";   
+   $myPicture = new pImage($w, $h,$myData); // width, height, dataset
+   
+   global $path_to_pchart; // have to declare path_to_pchart global otherwise it is not available in this scope  
+   $font = "$path_to_pchart/fonts/calibri.ttf";
+     
    /* Turn off Antialiasing */
    $myPicture->Antialias = TRUE; 
    
@@ -124,7 +309,7 @@ function drawPicture($myData, $width, $par, $title, $file)
    /* Add a border to the picture */
    $myPicture->drawRectangle(0,0,$w-1,$h-1,array("R"=>0,"G"=>0,"B"=>0));
  
-   /* Write the chart title */ 
+   /* Write the chart title */
    $myPicture->setFontProperties(array("FontName"=>$font,"FontSize"=>12*$w/800,"R"=>255,"G"=>255,"B"=>255));
    $myPicture->drawText(10,$tb*0.8,$title,array("FontSize"=>20*$w/800,"Align"=>TEXT_ALIGN_BOTTOMLEFT));
    
@@ -223,10 +408,54 @@ function drawDetPar($db,$width, $par,$blk,$qrt,$tel,$det)
          $times[0]=time();
          $values[0]=0;
          }
-      $title="$par B00$blk-Q$qrt-T$tel-$det";
+      $title="Q$qrt-T$tel";
       $file="$par$blk$qrt$tel$det.png";
          drawScatter($width, $par, $times, $values, $title, $file);
          print "<img src=\"plots/$file\">\n";
+}
+
+function drawDAQWPar($db,$width,$par)
+{
+   $result = getDAQWriterValues($db, $par);
+   $i=0;
+   foreach($result as $row)
+   {
+      $times[$i]=strtotime($row['time']);
+      $values[$i]=convertDAQtoHuman($par,$row[$par]);
+      $i+=1;
+   }
+   if(!$i){
+      $times[0]=time();
+      $values[0]=0;
+      }
+   $units=getDAQunits($par);
+   $title="$par ($units)";
+   $file="daq_writer_$par.png";
+   print "<h1>daq_writer:$par</h1>\n";
+   drawScatter($width, $par, $times, $values, $title, $file);
+   print "<img src=\"plots/$file\">\n";
+}
+
+function drawDAQRPar($db,$width,$par)
+{
+   $result = getDAQReaderValues($db, $par);
+   $i=0;
+   foreach($result as $row)
+   {
+      $times[$i]=strtotime($row['time']);
+      $values[$i]=convertDAQtoHuman($par,$row[$par]);
+      $i+=1;
+   }
+   if(!$i){
+      $times[0]=time();
+      $values[0]=0;
+      }
+   $units=getDAQunits($par);
+   $title="$par ($units)";
+   $file="daq_reader_$par.png";
+   print "<h1>daq_reader:$par</h1>\n";
+   drawScatter($width, $par, $times, $values, $title, $file);
+   print "<img src=\"plots/$file\">\n";
 }
 
 
@@ -277,6 +506,37 @@ function drawDetParBlock($db, $par, $blk, $det)
 
 function drawBlockTemperatures($db,$blk)
 {
+   /* get block card temperature */
+   $result = getElectronicsValues($db, "T1", $blk, "BLK0","BLKTemp");
+   $i=0;
+   foreach($result as $row)
+   {
+      $times[$i]=strtotime($row['time']);
+      $values[$i]=$row['value'];
+      $i+=1;
+   } 
+   if(!$i){
+      $times[0]=time();
+      $values[0]=0;
+   }
+   $parArray[]="BLK0";
+   $valArray[]=$values;
+   /* get PS card temperature */
+   $result = getElectronicsValues($db, "Tread", $blk, "PS0","PSCardTemp");
+   $i=0;
+   foreach($result as $row)
+   {
+      $times[$i]=strtotime($row['time']);
+      $values[$i]=$row['value'];
+      $i+=1;
+   } 
+   if(!$i){
+      $times[0]=time();
+      $values[0]=0;
+   }
+   $parArray[]="PS0";
+   $valArray[]=$values;
+   /* get FEE temperatures */
    $feelist=array("FE0","FE1","FE2","FE3","FE4","FE5","FE6","FE7");
    foreach($feelist as $fee){
       $result = getElectronicsValues($db, "T1", $blk, $fee,"FETemp");
@@ -294,7 +554,8 @@ function drawBlockTemperatures($db,$blk)
       $parArray[]=$fee;
       $valArray[]=$values;
    }
-   drawScatters(900, $parArray, $times, $valArray, "BLOCK0 FETemp", "temperatures.png");
+   print "<h1>Temperatures for Block$blk</h1>\n";
+   drawScatters(900, $parArray, $times, $valArray, "BLK$blk Temperatures", "temperatures.png");
    print "<img src=\"plots/temperatures.png\">\n";
 }
 ?>
@@ -306,6 +567,7 @@ function drawBlockTemperatures($db,$blk)
 </head>
 <body>
 <div class="main">
+<div class="temperatures">
 <form action='index.php' method='GET'>
 BLOCK: <select name='block'>
 <option value='0'>0</option>
@@ -315,11 +577,23 @@ BLOCK: <select name='block'>
 </select>
 <input type='hidden' name='temperature' value='yes' />
 <input type='submit' value='Temperatures'>
-</form><br>
+</form>
+</div>
+<div class="daq">
+<?php
+buildDAQWriterSelectionForm();
+buildDAQReaderSelectionForm();
+?>
+</div>
+<div class="detectors">
 <?php
 buildDetectorSelectionForm("SI1");
 buildDetectorSelectionForm("SI2");
 buildDetectorSelectionForm("CSI");
+?>
+</div>
+<br>
+<?php
 if(isset($_GET['parameter'])&&isset($_GET['block'])&&isset($_GET['detector'])){
    $db = openDatabase($path_to_database);
    drawDetParBlock($db, $_GET['parameter'], $_GET['block'], $_GET['detector']);
@@ -333,6 +607,16 @@ else if(isset($_GET['parameter'])&&isset($_GET['block'])&&isset($_GET['card'])&&
 else if(isset($_GET['block'])&&isset($_GET['temperature'])){
    $db = openDatabase($path_to_database);
    drawBlockTemperatures($db,$_GET['block']);
+   $db = null;
+}
+else if(isset($_GET['parameter'])&&isset($_GET['daq_writer'])){
+   $db = openDatabase($path_to_database);
+   drawDAQWPar($db,800,$_GET['parameter']);
+   $db = null;
+}
+else if(isset($_GET['parameter'])&&isset($_GET['daq_reader'])){
+   $db = openDatabase($path_to_database);
+   drawDAQRPar($db,800,$_GET['parameter']);
    $db = null;
 }
 ?>

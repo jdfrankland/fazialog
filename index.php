@@ -1,8 +1,20 @@
 <?php
-include("../pChart/class/pDraw.class.php");  
-include("../pChart/class/pImage.class.php");  
-include("../pChart/class/pData.class.php");
-include("../pChart/class/pScatter.class.php");
+/* set the path to the pChart directory from the directory where this script is
+   installed, as seen from the point of view of the webserver.
+   so if your webserver's root directory is /var/www/html
+   and you have symbolic links in that directory:
+   ls -l /var/www/html:
+      lrwxrwxrwx  1 root root   43 Jun 11 15:51 fazialog_viewer -> /some_path/fazialog_viewer
+      lrwxrwxrwx  1 root root   34 Jun 11 15:00 pChart -> /some_other_path/pChart
+   then you should set $path_to_pchart="$path_to_pchart" (the default)                              */   
+$path_to_pchart="../pChart";
+/* set the path to the FAZIAlog database file from the directory where this script is
+   installed, as seen from the point of view of the webserver (see comments above).           */
+$path_to_database="fazia.db";
+include("$path_to_pchart/class/pDraw.class.php");  
+include("$path_to_pchart/class/pImage.class.php");  
+include("$path_to_pchart/class/pData.class.php");
+include("$path_to_pchart/class/pScatter.class.php");
 
 function addParameterOption($param,$selected,$preselect)
 {
@@ -95,7 +107,7 @@ function drawPicture($myData, $width, $par, $title, $file)
    $offw=(1.05-$wp)*$w/2;
    $offh=(1-$hp)*($h-$tb)/2+$tb;
    $myPicture = new pImage($w, $h,$myData); // width, height, dataset  
-   
+   $font = "$path_to_pchart/fonts/calibri.ttf";   
    /* Turn off Antialiasing */
    $myPicture->Antialias = TRUE; 
    
@@ -113,11 +125,11 @@ function drawPicture($myData, $width, $par, $title, $file)
    $myPicture->drawRectangle(0,0,$w-1,$h-1,array("R"=>0,"G"=>0,"B"=>0));
  
    /* Write the chart title */ 
-   $myPicture->setFontProperties(array("FontName"=>"../pChart/fonts/calibri.ttf","FontSize"=>12*$w/800,"R"=>255,"G"=>255,"B"=>255));
+   $myPicture->setFontProperties(array("FontName"=>$font,"FontSize"=>12*$w/800,"R"=>255,"G"=>255,"B"=>255));
    $myPicture->drawText(10,$tb*0.8,$title,array("FontSize"=>20*$w/800,"Align"=>TEXT_ALIGN_BOTTOMLEFT));
    
    /* Set the default font */
-   $myPicture->setFontProperties(array("FontName"=>"../pChart/fonts/calibri.ttf","FontSize"=>16*$w/800,"R"=>0,"G"=>0,"B"=>0));
+   $myPicture->setFontProperties(array("FontName"=>$font,"FontSize"=>16*$w/800,"R"=>0,"G"=>0,"B"=>0));
     
     /* Define the chart area */ 
    $myPicture->setGraphArea($offw,$offh,$w-$offw,$h-$offh-$tb); // (x,y) top left, (x,y) bottom right 
@@ -309,17 +321,17 @@ buildDetectorSelectionForm("SI1");
 buildDetectorSelectionForm("SI2");
 buildDetectorSelectionForm("CSI");
 if(isset($_GET['parameter'])&&isset($_GET['block'])&&isset($_GET['detector'])){
-   $db = openDatabase("fazia.db");
+   $db = openDatabase($path_to_database);
    drawDetParBlock($db, $_GET['parameter'], $_GET['block'], $_GET['detector']);
    $db = null;
 }
 else if(isset($_GET['parameter'])&&isset($_GET['block'])&&isset($_GET['card'])&&isset($_GET['module'])){
-   $db = openDatabase("fazia.db");
+   $db = openDatabase($path_to_database);
    drawElecPar($db,800,$_GET['parameter'],$_GET['block'],$_GET['card'],$_GET['module']);
    $db = null;
 }
 else if(isset($_GET['block'])&&isset($_GET['temperature'])){
-   $db = openDatabase("fazia.db");
+   $db = openDatabase($path_to_database);
    drawBlockTemperatures($db,$_GET['block']);
    $db = null;
 }

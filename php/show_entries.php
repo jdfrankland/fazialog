@@ -11,7 +11,7 @@
     **************************************/
  
     // Create (connect to) SQLite database in file
-    $file_db = new PDO('sqlite:/home/john/software/sources/FAZIALOG/wordpress/fazia.db');
+    $file_db = new PDO('sqlite:/var/www/weblog/fazialog_viewer/justatest.db');
     // Set errormode to exceptions
     $file_db->setAttribute(PDO::ATTR_ERRMODE, 
                             PDO::ERRMODE_EXCEPTION);
@@ -23,17 +23,17 @@
     //now output the data to a simple html table...
     print "<h1>DETECTORS</h1>";
     print "<table border=1>";
-    print "<tr><td>Time</td><td>parameter</td><td>alias</td><td>channel</td><td>BLK</td><td>QRT</td><td>TEL</td><td>DET</td><td>FEE</td><td>Module</td><td>VALUE</td><td>Units</td></tr>";
+    print "<tr><td>Time</td><td>parameter</td><td>mod</td><td>BLK</td><td>QRT</td><td>TEL</td><td>DET</td><td>DET</td><td>FEE</td><td>Module</td><td>VALUE</td><td>Units</td></tr>";
     foreach($result as $row)
     {
       print "<tr><td>".$row['time']."</td>";
       print "<td>".$row['parameter']."</td>";
-      print "<td>".$row['alias']."</td>";
-      print "<td>".$row['channel']."</td>";
+      print "<td>".$row['module_name']."</td>";
       print "<td>".$row['block']."</td>";
       print "<td>".$row['quartet']."</td>";
       print "<td>".$row['telescope']."</td>";
       print "<td>".$row['detector']."</td>";
+      print "<td>".$row['detector_name']."</td>";
       print "<td>".$row['frontEnd']."</td>";
       print "<td>".$row['module']."</td>";
       print "<td>".$row['value']."</td>";

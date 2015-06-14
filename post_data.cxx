@@ -54,8 +54,21 @@ void read_and_send_parameter_list(const string& filename)
          ++pairs;
       }
 
+         curl_formadd(&formpost,
+                      &lastptr,
+                      CURLFORM_COPYNAME, "category",
+                      CURLFORM_COPYCONTENTS, "detectors",
+                      CURLFORM_END);
+         ++pairs;
+         curl_formadd(&formpost,
+                      &lastptr,
+                      CURLFORM_COPYNAME, "user",
+                      CURLFORM_COPYCONTENTS, "slowcontrol",
+                      CURLFORM_END);
+         ++pairs;
+			
       ++id;
-      if(pairs>(1000-data.size())){
+      if(pairs>(1000-(data.size()+2))){
          // default PHP limit for POST: 1000 key-value pairs (difficult to change for apache module)
          // if we get near the limit (i.e. if we cannot send the next full set of key-value pairs
          // without reaching the limit), we send everything we got so far now
@@ -77,7 +90,7 @@ void read_and_send_parameter_list(const string& filename)
    //cout << "read " << nlines << " lines" << endl;
    // send any remaining data to server
    if(pairs){
-         //cout << "END: Sending " << pairs << " key-value pairs to server..." << endl;
+        // cout << "END: Sending " << pairs << " key-value pairs to server..." << endl;
       curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
       res = curl_easy_perform(curl);
       if (res != CURLE_OK)

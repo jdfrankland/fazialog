@@ -15,9 +15,6 @@
   ($_REQUEST['user']!=null)?$user_name=$_REQUEST['user']:$user_name="Unknown";
   ($_REQUEST['category']!=null)?$CATEGORY=$_REQUEST['category']:$CATEGORY="Uncategorized";
   
-  print "user=$user_name\n";
-  print "category=$CATEGORY\n";
-
    // Set default timezone
    date_default_timezone_set('UTC');
  
@@ -30,7 +27,7 @@
       //$time_start = microtime(true);
       
       // Create or connect to SQLite database in file
-      $file_db = new PDO('sqlite:/home/john/software/sources/FAZIALOG/wordpress/fazia.db');
+      $file_db = new PDO('sqlite:/var/www/weblog/fazialog_viewer/justatest.db');
       // Set errormode to exceptions
       $file_db->setAttribute(PDO::ATTR_ERRMODE, 
                             PDO::ERRMODE_EXCEPTION);

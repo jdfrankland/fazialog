@@ -8,7 +8,7 @@
     **************************************/
  
     // Create (connect to) SQLite database in file
-    $file_db = new PDO('sqlite:/home/john/software/sources/FAZIALOG/wordpress/fazia.db');
+    $file_db = new PDO('sqlite:/var/www/weblog/fazialog_viewer/justatest.db');
     // Set errormode to exceptions
     $file_db->setAttribute(PDO::ATTR_ERRMODE, 
                             PDO::ERRMODE_EXCEPTION);
@@ -25,11 +25,11 @@
                     quartet INTEGER, 
                     telescope INTEGER, 
                     detector TEXT, 
+                    detector_name TEXT, 
                     frontEnd INTEGER, 
                     module TEXT, 
+                    module_name TEXT, 
                     parameter TEXT, 
-                    alias TEXT, 
-                    channel TEXT, 
                     value TEXT, 
                     units TEXT, 
                     time TEXT)");
